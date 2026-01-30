@@ -277,21 +277,21 @@ app.get("/setup/api/status", requireSetupAuth, async (_req, res) => {
     {
       value: "openai",
       label: "OpenAI",
-      hint: "Codex OAuth + API key",
+      hint: "GPT models",
       options: [
-        { value: "codex-cli", label: "OpenAI Codex OAuth (Codex CLI)" },
-        { value: "openai-codex", label: "OpenAI Codex (ChatGPT OAuth)" },
-        { value: "openai-api-key", label: "OpenAI API key" },
+        { value: "openai-api-key", label: "OpenAI API key (from platform.openai.com)" },
+        { value: "openai-codex", label: "OpenAI ChatGPT OAuth" },
+        { value: "codex-cli", label: "OpenAI Codex CLI OAuth" },
       ],
     },
     {
       value: "anthropic",
       label: "Anthropic",
-      hint: "Claude Code CLI + API key",
+      hint: "Claude API (recommended)",
       options: [
-        { value: "claude-cli", label: "Anthropic token (Claude Code CLI)" },
-        { value: "token", label: "Anthropic token (paste setup-token)" },
-        { value: "apiKey", label: "Anthropic API key" },
+        { value: "apiKey", label: "Anthropic API key (from console.anthropic.com)" },
+        { value: "token", label: "Anthropic setup-token (from Claude Code CLI)" },
+        { value: "claude-cli", label: "Anthropic Claude Code CLI OAuth" },
       ],
     },
     {
