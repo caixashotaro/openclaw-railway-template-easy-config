@@ -2,7 +2,7 @@
 FROM node:22-bookworm AS openclaw-build
 
 # Install build dependencies
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y \
     git \
     ca-certificates \
     curl \
@@ -23,7 +23,7 @@ WORKDIR /openclaw
 ARG OPENCLAW_GIT_REF=main
 RUN git clone --depth 1 --branch "${OPENCLAW_GIT_REF}" https://github.com/openclaw/openclaw.git .
 
-# Patch package.json files (sed commands)
+# Patch package.json files
 RUN set -eux; \
     find ./extensions -name 'package.json' -type f | while read -r f; do \
     sed -i -E 's/"openclaw"[[:space:]]*:[[:space:]]*">=[^"]+"/"openclaw": "*"/g' "$f"; \
@@ -44,8 +44,8 @@ FROM node:22-bookworm
 
 ENV NODE_ENV=production
 
-# Install system dependencies
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+# Install system dependencies (including LibreOffice)
+RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
     build-essential \
@@ -61,6 +61,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     wget \
     imagemagick \
     ghostscript \
+    libreoffice \
     pkg-config \
     sudo \
     && rm -rf /var/lib/apt/lists/*
@@ -81,7 +82,7 @@ RUN useradd -m -s /bin/bash linuxbrew && echo 'linuxbrew ALL=(ALL) NOPASSWD:ALL'
 USER linuxbrew
 RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Switch back to root to finish setup
+# Switch back to root
 USER root
 RUN chown -R root:root /home/linuxbrew/.linuxbrew
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
