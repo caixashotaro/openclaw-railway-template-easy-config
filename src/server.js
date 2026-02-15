@@ -32,6 +32,8 @@ const OPENCLAW_DEFAULT_MODEL = process.env.OPENCLAW_DEFAULT_MODEL?.trim() || "";
 const OPENCLAW_GATEWAY_TOKEN = SETUP_PASSWORD || crypto.randomBytes(32).toString("hex");
 process.env.OPENCLAW_GATEWAY_TOKEN = OPENCLAW_GATEWAY_TOKEN;
 
+console.log(`[setup] OPENCLAW_DEFAULT_MODEL env = "${OPENCLAW_DEFAULT_MODEL}"`);
+
 if (!SETUP_PASSWORD) {
   console.warn("[setup] WARNING: SETUP_PASSWORD not set - using auto-generated token");
   console.warn(`[setup] Gateway token: ${OPENCLAW_GATEWAY_TOKEN.slice(0, 16)}...`);
