@@ -149,19 +149,55 @@ async function startGateway() {
 
   console.log(`[gateway] ========== TOKEN SYNC COMPLETE ==========`);
 
-  // Apply model override from environment variable before starting gateway.
+  // Apply model override by directly rewriting the config JSON.
+  // This replaces ALL model references (including per-agent and subagent overrides).
   if (OPENCLAW_DEFAULT_MODEL) {
-    console.log(`[gateway] Setting default model to: ${OPENCLAW_DEFAULT_MODEL}`);
-    const modelResult = await runCmd(
-      OPENCLAW_NODE,
-      clawArgs(["config", "set", "agents.defaults.model.primary", OPENCLAW_DEFAULT_MODEL]),
-    );
-    console.log(`[gateway] model.primary set: exit=${modelResult.code} ${modelResult.output.trim()}`);
-    const subResult = await runCmd(
-      OPENCLAW_NODE,
-      clawArgs(["config", "set", "agents.defaults.subagents.model", OPENCLAW_DEFAULT_MODEL]),
-    );
-    console.log(`[gateway] subagents.model set: exit=${subResult.code} ${subResult.output.trim()}`);
+    try {
+      const cfgPath = configPath();
+      const raw = fs.readFileSync(cfgPath, "utf8");
+      const cfg = JSON.parse(raw);
+      console.log(`[gateway] Config BEFORE model override: ${raw}`);
+
+      // Replace all known model fields
+      const setDeep = (obj, keys, val) => {
+        for (let i = 0; i < keys.length - 1; i++) {
+          if (!obj[keys[i]] || typeof obj[keys[i]] !== "object") obj[keys[i]] = {};
+          obj = obj[keys[i]];
+        }
+        obj[keys[keys.length - 1]] = val;
+      };
+
+      // Set primary model
+      setDeep(cfg, ["agents", "defaults", "model", "primary"], OPENCLAW_DEFAULT_MODEL);
+
+      // Clear fallbacks that reference other providers
+      if (cfg.agents?.defaults?.model?.fallbacks) {
+        cfg.agents.defaults.model.fallbacks = [];
+      }
+
+      // Set subagent model
+      setDeep(cfg, ["agents", "defaults", "subagents", "model"], OPENCLAW_DEFAULT_MODEL);
+
+      // Override per-agent model if any agents are listed
+      if (Array.isArray(cfg.agents?.list)) {
+        for (const agent of cfg.agents.list) {
+          if (agent.model) agent.model = OPENCLAW_DEFAULT_MODEL;
+          if (agent.model?.primary) agent.model.primary = OPENCLAW_DEFAULT_MODEL;
+        }
+      }
+
+      // Also use openclaw models set command
+      fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
+      console.log(`[gateway] Config AFTER model override: ${JSON.stringify(cfg, null, 2)}`);
+
+      const modelsSet = await runCmd(
+        OPENCLAW_NODE,
+        clawArgs(["models", "set", OPENCLAW_DEFAULT_MODEL]),
+      );
+      console.log(`[gateway] models set: exit=${modelsSet.code} ${modelsSet.output.trim()}`);
+    } catch (err) {
+      console.error(`[gateway] Model override error: ${err}`);
+    }
   }
 
   const args = [
