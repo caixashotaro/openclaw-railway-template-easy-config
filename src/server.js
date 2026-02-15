@@ -152,14 +152,16 @@ async function startGateway() {
   // Apply model override from environment variable before starting gateway.
   if (OPENCLAW_DEFAULT_MODEL) {
     console.log(`[gateway] Setting default model to: ${OPENCLAW_DEFAULT_MODEL}`);
-    await runCmd(
+    const modelResult = await runCmd(
       OPENCLAW_NODE,
       clawArgs(["config", "set", "agents.defaults.model.primary", OPENCLAW_DEFAULT_MODEL]),
     );
-    await runCmd(
+    console.log(`[gateway] model.primary set: exit=${modelResult.code} ${modelResult.output.trim()}`);
+    const subResult = await runCmd(
       OPENCLAW_NODE,
       clawArgs(["config", "set", "agents.defaults.subagents.model", OPENCLAW_DEFAULT_MODEL]),
     );
+    console.log(`[gateway] subagents.model set: exit=${subResult.code} ${subResult.output.trim()}`);
   }
 
   const args = [
