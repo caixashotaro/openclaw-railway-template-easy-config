@@ -186,6 +186,9 @@ async function startGateway() {
         }
       }
 
+      // Increase compaction buffer to prevent context limit errors
+      setDeep(cfg, ["agents", "defaults", "compaction", "reserveTokensFloor"], 4000);
+
       // Also use openclaw models set command
       fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
       console.log(`[gateway] Config AFTER model override: ${JSON.stringify(cfg, null, 2)}`);
