@@ -24,6 +24,9 @@ function debug(...args) {
   if (DEBUG) console.log(...args);
 }
 
+// Override the default LLM model via environment variable.
+const OPENCLAW_DEFAULT_MODEL = process.env.OPENCLAW_DEFAULT_MODEL?.trim() || "";
+
 // Gateway admin token - use SETUP_PASSWORD for simplicity
 // This protects both the /setup wizard and the OpenClaw gateway
 const OPENCLAW_GATEWAY_TOKEN = SETUP_PASSWORD || crypto.randomBytes(32).toString("hex");
@@ -145,6 +148,19 @@ async function startGateway() {
   }
 
   console.log(`[gateway] ========== TOKEN SYNC COMPLETE ==========`);
+
+  // Apply model override from environment variable before starting gateway.
+  if (OPENCLAW_DEFAULT_MODEL) {
+    console.log(`[gateway] Setting default model to: ${OPENCLAW_DEFAULT_MODEL}`);
+    await runCmd(
+      OPENCLAW_NODE,
+      clawArgs(["config", "set", "agents.defaults.model.primary", OPENCLAW_DEFAULT_MODEL]),
+    );
+    await runCmd(
+      OPENCLAW_NODE,
+      clawArgs(["config", "set", "agents.defaults.subagents.model", OPENCLAW_DEFAULT_MODEL]),
+    );
+  }
 
   const args = [
     "gateway",
